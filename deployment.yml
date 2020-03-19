@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: person-counter-nodejs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: person-counter-nodejs
+  template:
+    metadata:
+      labels:
+        app: person-counter-nodejs
+    spec:
+      containers:
+      - name: person-counter-nodejs
+        image: 192.168.1.2:5000/person-counter-nodejs
+        ports:
+        - containerPort: 7373
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    run: person-counter-nodejs
+  name: person-counter-nodejs
+spec:
+  ports:
+  - port: 7373
+    nodePort: 30373
+  selector:
+    app: person-counter-nodejs
+  type: LoadBalancer
