@@ -5,9 +5,12 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const path = require('path')
 const cors = require('cors')
+
+const pixelUtil = require('pixel-util')
+const Canvas = require('canvas')
 const { createCanvas, loadImage } = require('canvas')
-const formidable = require('formidable')
-var coco_ssd = require('@tensorflow-models/coco-ssd')
+const coco_ssd = require('@tensorflow-models/coco-ssd')
+const axios = require('axios')
 
 const port = 7373;
 
@@ -51,36 +54,42 @@ app.get('/', (req, res) => {
   res.send("Hi!")
 })
 
-app.get('/upload_form', (req, res) => {
-  res.sendFile(path.join(__dirname, 'upload_form.html'));
-})
 
 app.post('/predict', (req, res) => {
   if(!model) return res.status(500).send('Model has not been loaded')
+  if(!req.body.url) return res.status(500).send('URL not specified')
 
-  var form = new formidable.IncomingForm();
-  form.parse(req, function (err, fields, files) {
-    if(err) return res.status(500).send(`Error parsing form: ${err}`)
+  console.log(`Request for ${req.body.url}`)
 
-    if(!files.image) return res.status(500).send('Image not present in form')
-    loadImage(files.image.path)
-    .then((image) => {
+  console.log(`Downloading image ${req.body.url}`)
+  var image = new Canvas.Image;
+  pixelUtil.createBuffer(req.body.url)
+  .then((buffer) => {
 
-      // Create canvas
-      const canvas = createCanvas(image.width, image.height)
-      const ctx = canvas.getContext('2d')
-      ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
+    image.src = buffer;
 
-      model.detect(canvas)
-      .then(predictions => {
-        res.send({person_count: process_predictions(predictions)})
-      })
-      .catch(error => {res.status(500).send(`Error while predicting: ${error}`)})
+    // Create canvas
+    const canvas = createCanvas(image.width, image.height)
+    const ctx = canvas.getContext('2d')
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
+
+    console.log(`Download complete, image is  ${image.width}x${image.height}`)
+
+    console.log(`Predicting...`)
+    model.detect(canvas)
+    .then(predictions => {
+      var processed_predictions = process_predictions(predictions)
+      console.log(`Prediction: ${processed_predictions}`)
+      res.send({person_count: processed_predictions})
     })
-    .catch(error => {res.status(500).send(`Error while loading the image: ${error}`)})
-
+    .catch(error => {
+      res.status(500).send(`Error while predicting: ${error}`)
+    })
   })
-
+  .catch(error => {
+    console.log(`Error while fetching image: ${error}`)
+    res.status(500).send(`Error while fetching image: ${error}`)
+  })
 
 })
 

@@ -12,9 +12,11 @@
     "@tensorflow-models/coco-ssd": "^2.0.1",
     "@tensorflow/tfjs-converter": "^1.7.0",
     "@tensorflow/tfjs-core": "^1.7.0",
+    "axios": "^0.19.2",
     "canvas": "^2.6.1",
     "cors": "^2.8.5",
     "express": "^4.17.1",
-    "formidable": "^1.2.2"
+    "formidable": "^1.2.2",
+    "pixel-util": "0.0.2"
   }
 }
