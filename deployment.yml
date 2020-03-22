@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: person-counter-nodejs
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: person-counter-nodejs
